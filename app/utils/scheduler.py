@@ -89,20 +89,3 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     yield
     scheduler.shutdown()
-
-
-# Example usage of the Scheduler
-# def example_task():
-#     print(f"Task executed at: {datetime.now()}")
-
-# # Schedule jobs
-# scheduler.add_job_at_timestamp(example_task, datetime(2024, 12, 30, 15, 30))
-# scheduler.add_job_every_second(example_task, interval=5)  # Runs every 5 seconds
-# scheduler.add_job_every_minute(example_task, interval=1)  # Runs every minute
-# scheduler.add_job_every_hour(example_task, interval=1)    # Runs every hour
-# scheduler.add_job_daily(example_task, hour=12, minute=0)  # Runs daily at noon
-
-# scheduler.add_job_at_timestamp(example_task, datetime.now() + timedelta(seconds=10), job_id="example_once")
-# scheduler.add_job_every_second(example_task, interval=5, job_id="example_second")
-# scheduler.add_job_daily(example_task, hour=12, minute=0, job_id="example_daily")
-# scheduler.list_jobs()
