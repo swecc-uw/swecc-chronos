@@ -1,4 +1,4 @@
-# Chronos - Observability for docker
+# Chronos - Observability for Docker Hosts
 
 ## Run
 
