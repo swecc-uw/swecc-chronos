@@ -4,6 +4,9 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime
 from fastapi import FastAPI
+from app.services.docker_service import DockerService
+from app.models.container import convert_health_metric_to_dynamo
+from app.services.dynamodb_service import db
 import logging
 
 mapping = {
@@ -83,9 +86,23 @@ class Scheduler:
 
 # Singleton instance of the Scheduler class
 scheduler = Scheduler()
+docker_service = DockerService()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler.start()
     yield
     scheduler.shutdown()
+
+def update_to_db_task():
+    stats = docker_service.poll_all_container_stats()
+    dynamodb_stats = [convert_health_metric_to_dynamo(stat) for stat in stats]
+
+    for stat in dynamodb_stats:
+        print(f"Adding item to table: {stat}")
+        try:
+            db.add_item_to_table("health_metrics", stat.model_dump())
+        except Exception as e:
+            print(f"Error adding item to table: {e}")
+
+scheduler.add_job_every(update_to_db_task, "s", 10, "update_db")

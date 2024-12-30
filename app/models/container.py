@@ -107,3 +107,64 @@ class ContainerStats(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+class DynamoHealthMetric(BaseModel):
+    # dynamodb type system is a pain
+    """Compact & compatible DynamoDB health metric data"""
+    container_name: str = Field(..., description="Container name")
+    timestamp: str = Field(..., description="Metric timestamp")
+    memory_usage_bytes: int = Field(..., description="Memory usage in bytes")
+    memory_limit_bytes: int = Field(..., description="Memory limit in bytes")
+    memory_percent: int = Field(..., description="Memory usage percentage")
+    system_cpu_usage: int = Field(..., description="Host's total CPU usage")
+    online_cpus: int = Field(..., description="Number of CPU cores available")
+    status: str = Field(..., description="Container status")
+    health_status: Optional[str] = Field(None, description="Health check status")
+    nw_rx_bytes: int = Field(..., description="Received bytes")
+    nw_tx_bytes: int = Field(..., description="Transmitted bytes")
+    nw_rx_packets: int = Field(..., description="Received packets")
+    nw_tx_packets: int = Field(..., description="Transmitted packets")
+    nw_rx_errors: int = Field(..., description="Receive errors")
+    nw_tx_errors: int = Field(..., description="Transmit errors")
+    nw_rx_dropped: int = Field(..., description="Received packets dropped")
+    nw_tx_dropped: int = Field(..., description="Transmitted packets dropped")
+    disk_read_bytes: int = Field(..., description="Total bytes read")
+    disk_write_bytes: int = Field(..., description="Total bytes written")
+    disk_reads: int = Field(..., description="Total read operations")
+    disk_writes: int = Field(..., description="Total write operations")
+    restarts: int = Field(..., description="Number of container restarts")
+    exit_code: Optional[int] = Field(None, description="Last exit code")
+    started_at: Optional[datetime] = Field(None, description="Last start timestamp")
+    finished_at: Optional[datetime] = Field(None, description="Last stop timestamp")
+
+
+def convert_health_metric_to_dynamo(metric: ContainerStats) -> DynamoHealthMetric:
+    """Convert ContainerStats to DynamoHealthMetric"""
+    first_network_key = next(iter(metric.network))
+    return DynamoHealthMetric(
+        container_name=metric.metadata.name,
+        timestamp=metric.timestamp.strftime('%Y-%m-%dT%H:%M:%S'),
+        memory_usage_bytes=metric.memory.usage_bytes,
+        memory_limit_bytes=metric.memory.limit_bytes,
+        memory_percent=int(metric.memory.percent),
+        system_cpu_usage=metric.cpu.system_cpu_usage,
+        online_cpus=metric.cpu.online_cpus,
+        status=metric.health.status,
+        health_status=metric.health.health_status,
+        nw_rx_bytes=metric.network[first_network_key].rx_bytes,
+        nw_tx_bytes=metric.network[first_network_key].tx_bytes,
+        nw_rx_packets=metric.network[first_network_key].rx_packets,
+        nw_tx_packets=metric.network[first_network_key].tx_packets,
+        nw_rx_errors=metric.network[first_network_key].rx_errors,
+        nw_tx_errors=metric.network[first_network_key].tx_errors,
+        nw_rx_dropped=metric.network[first_network_key].rx_dropped,
+        nw_tx_dropped=metric.network[first_network_key].tx_dropped,
+        disk_read_bytes=metric.disk.read_bytes,
+        disk_write_bytes=metric.disk.write_bytes,
+        disk_reads=metric.disk.reads,
+        disk_writes=metric.disk.writes,
+        restarts=metric.health.restarts,
+        exit_code=metric.health.exit_code,
+        started_at=metric.health.started_at,
+        finished_at=metric.health.finished_at
+    )
