@@ -86,7 +86,8 @@ class DynamoDBService:
 
         try:
             response = table.scan(
-            FilterExpression='timestamp >= :one_week_ago',
+            FilterExpression='#ts >= :one_week_ago',
+            ExpressionAttributeNames={'#ts': 'timestamp'},
             ExpressionAttributeValues={':one_week_ago': one_week_ago_str}
             )
             items = response['Items']
@@ -99,7 +100,8 @@ class DynamoDBService:
         table = self.client.Table(table_name)
         try:
             response = table.scan(
-            FilterExpression='timestamp BETWEEN :start_time AND :end_time',
+            FilterExpression='#ts BETWEEN :start_time AND :end_time',
+            ExpressionAttributeNames={'#ts': 'timestamp'},
             ExpressionAttributeValues={':start_time': start_time, ':end_time': end_time}
             )
             items = response['Items']
@@ -115,7 +117,8 @@ class DynamoDBService:
 
         try:
             response = table.scan(
-            FilterExpression='container_name = :container_name AND timestamp >= :one_week_ago',
+            FilterExpression='#cn = :container_name AND #ts >= :one_week_ago',
+            ExpressionAttributeNames={'#ts': 'timestamp', '#cn': 'container_name'},
             ExpressionAttributeValues={':container_name': container_name, ':one_week_ago': one_week_ago_str}
             )
             items = response['Items']
@@ -128,7 +131,8 @@ class DynamoDBService:
         table = self.client.Table(table_name)
         try:
             response = table.scan(
-            FilterExpression='container_name = :container_name',
+            FilterExpression='#cn = :container_name',
+            ExpressionAttributeNames={'#cn': 'container_name'},
             ExpressionAttributeValues={':container_name': container_name}
             )
             items = response['Items']
