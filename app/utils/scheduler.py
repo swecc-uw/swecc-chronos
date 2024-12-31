@@ -16,7 +16,7 @@ mapping = {
     "h": "hour"
 }
 
-ALLOWED_JOBS = [settings.POLL_DATA_JOB_ID, "expose_tasks"]
+ALLOWED_JOBS = [settings.POLL_DATA_JOB_ID]
 
 class Scheduler:
     """Scheduler class for running periodic or one-time tasks."""
@@ -140,5 +140,3 @@ def expose_tasks():
     print("This is an exposed task")
 
 scheduler.add_job_every(update_to_db_task, "m", 10, settings.POLL_DATA_JOB_ID)
-# scheduler.add_job_every(hidden_task, "s", 5, "hidden_task")
-scheduler.add_job_every(expose_tasks, "s", 5, "expose_tasks")
