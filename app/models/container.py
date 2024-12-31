@@ -168,3 +168,6 @@ def convert_health_metric_to_dynamo(metric: ContainerStats) -> DynamoHealthMetri
         started_at=metric.health.started_at,
         finished_at=metric.health.finished_at
     )
+
+class JobItem(BaseModel):
+    id: str = Field(..., description="Job ID")

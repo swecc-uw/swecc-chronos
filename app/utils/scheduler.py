@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.services.docker_service import DockerService
 from app.models.container import convert_health_metric_to_dynamo
 from app.services.dynamodb_service import db
+from app.core.config import settings
 import logging
 
 mapping = {
@@ -15,9 +16,12 @@ mapping = {
     "h": "hour"
 }
 
+ALLOWED_JOBS = [settings.POLL_DATA_JOB_ID, "expose_tasks"]
+
 class Scheduler:
     """Scheduler class for running periodic or one-time tasks."""
     _instance = None
+    _paused_job = []
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -72,8 +76,32 @@ class Scheduler:
         """List all active jobs."""
         jobs = self.scheduler.get_jobs()
         for job in jobs:
-            self.logger.info(f"Job: {job}")
-        return jobs
+            if(job.id not in ALLOWED_JOBS):
+                jobs.remove(job)
+        return [job.id for job in jobs]
+
+    def pause_job(self, job_id):
+        """Pause a scheduled job."""
+        # preliminary hide jobs from the list
+        if(job_id in ALLOWED_JOBS):
+            self.scheduler.pause_job(job_id)
+            self._paused_job.append(job_id)
+
+    def resume_job(self, job_id):
+        """Resume a paused job."""
+        if(job_id in ALLOWED_JOBS):
+            self.scheduler.resume_job(job_id)
+            self._paused_job.remove(job_id)
+
+    def get_job_status(self, job_id):
+        """Get the status of a job."""
+        if(job_id in ALLOWED_JOBS):
+            if(job_id in self._paused_job):
+                return {job_id: "paused"}
+            else:
+                return {job_id: "running"}
+        else:
+            return "Job not found"
 
     def start(self):
         """Start the scheduler."""
@@ -105,4 +133,12 @@ def update_to_db_task():
         except Exception as e:
             print(f"Error adding item to table: {e}")
 
-scheduler.add_job_every(update_to_db_task, "m", 10, "update_db")
+def hidden_task():
+    print("This is a hidden task")
+
+def expose_tasks():
+    print("This is an exposed task")
+
+scheduler.add_job_every(update_to_db_task, "m", 10, settings.POLL_DATA_JOB_ID)
+# scheduler.add_job_every(hidden_task, "s", 5, "hidden_task")
+scheduler.add_job_every(expose_tasks, "s", 5, "expose_tasks")
