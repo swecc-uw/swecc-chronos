@@ -20,6 +20,28 @@ class DockerService:
     def __init__(self):
         self.client = docker.from_env()
 
+    def get_all_containers_live_status(self):
+        try:
+            containers = self.client.containers.list(all=True)
+            return {
+                container.name: container.status
+                for container in containers
+            }
+        except Exception as e:
+            logger.error(f"Failed to list containers: {str(e)}")
+            return {}
+
+    def get_container_metadata(self, container_name: str) -> Optional[ContainerMetadata]:
+        try:
+            container = self.client.containers.get(container_name)
+            return self._get_container_metadata(container)
+        except NotFound:
+            logger.warning(f"Container {container_name} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting metadata for container {container_name}: {str(e)}")
+            return None
+
     def _get_container_metadata(self, container) -> ContainerMetadata:
         try:
             container.reload()

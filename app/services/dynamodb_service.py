@@ -1,6 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-from boto3.dynamodb.types import TypeSerializer
+from datetime import datetime, timedelta
 
 class DynamoDBService:
     def __init__(self):
@@ -73,6 +73,64 @@ class DynamoDBService:
         table = self.client.Table(table_name)
         try:
             response = table.scan()
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get items from table '{table_name}': {e}")
+            return []
+        
+    def get_recent_items_from_table(self, table_name):
+        table = self.client.Table(table_name)
+        one_week_ago = datetime.now() - timedelta(weeks=1)
+        one_week_ago_str = one_week_ago.strftime('%Y-%m-%dT%H:%M:%S')
+
+        try:
+            response = table.scan(
+            FilterExpression='timestamp >= :one_week_ago',
+            ExpressionAttributeValues={':one_week_ago': one_week_ago_str}
+            )
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get recent items from table '{table_name}': {e}")
+            return []
+        
+    def get_time_range_items_from_table(self, table_name, start_time, end_time):
+        table = self.client.Table(table_name)
+        try:
+            response = table.scan(
+            FilterExpression='timestamp BETWEEN :start_time AND :end_time',
+            ExpressionAttributeValues={':start_time': start_time, ':end_time': end_time}
+            )
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get items from table '{table_name}': {e}")
+            return []
+        
+    def get_recent_items_by_container_name(self, table_name, container_name):
+        table = self.client.Table(table_name)
+        one_week_ago = datetime.now() - timedelta(weeks=1)
+        one_week_ago_str = one_week_ago.strftime('%Y-%m-%dT%H:%M:%S')
+
+        try:
+            response = table.scan(
+            FilterExpression='container_name = :container_name AND timestamp >= :one_week_ago',
+            ExpressionAttributeValues={':container_name': container_name, ':one_week_ago': one_week_ago_str}
+            )
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get recent items from table '{table_name}': {e}")
+            return []
+        
+    def get_all_items_by_container_name(self, table_name, container_name):
+        table = self.client.Table(table_name)
+        try:
+            response = table.scan(
+            FilterExpression='container_name = :container_name',
+            ExpressionAttributeValues={':container_name': container_name}
+            )
             items = response['Items']
             return items
         except ClientError as e:

@@ -105,4 +105,4 @@ def update_to_db_task():
         except Exception as e:
             print(f"Error adding item to table: {e}")
 
-scheduler.add_job_every(update_to_db_task, "s", 10, "update_db")
+scheduler.add_job_every(update_to_db_task, "m", 10, "update_db")
