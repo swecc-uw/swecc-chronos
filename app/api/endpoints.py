@@ -9,6 +9,9 @@ from typing import List
 router = APIRouter()
 docker_service = DockerService()
 
+@router.get("/health", tags=["health"])
+async def health_check():
+    return {"status": "ok"}     
 
 @router.get("/raw-usage", response_model=List[ContainerStats], tags=["containers"])
 async def get_container_usage():

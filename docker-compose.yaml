@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  chronos:
+    tty: true
+    build: .
+    networks:
+      - swecc-default
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8002:8002"
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+
+networks:
+  swecc-default:
