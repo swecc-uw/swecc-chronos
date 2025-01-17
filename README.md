@@ -10,6 +10,8 @@ AWS_DEFAULT_REGION
 
 ## Run
 
+Create the `swecc_default` network.
+
 ```bash
-docker run -v /var/run/docker.sock:/var/run/docker.sock -p 8002:8002 $(docker build -q .)
+docker compose up
 ```
