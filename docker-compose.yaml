@@ -18,3 +18,5 @@ services:
 
 networks:
   swecc-default:
+    external: true
+    name: swecc-default
