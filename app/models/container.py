@@ -134,8 +134,8 @@ class DynamoHealthMetric(BaseModel):
     disk_writes: int = Field(..., description="Total write operations")
     restarts: int = Field(..., description="Number of container restarts")
     exit_code: Optional[int] = Field(None, description="Last exit code")
-    started_at: Optional[datetime] = Field(None, description="Last start timestamp")
-    finished_at: Optional[datetime] = Field(None, description="Last stop timestamp")
+    started_at: Optional[str] = Field(None, description="Last start timestamp")
+    finished_at: Optional[str] = Field(None, description="Last stop timestamp")
 
 
 def convert_health_metric_to_dynamo(metric: ContainerStats) -> DynamoHealthMetric:
@@ -165,8 +165,8 @@ def convert_health_metric_to_dynamo(metric: ContainerStats) -> DynamoHealthMetri
         disk_writes=metric.disk.writes,
         restarts=metric.health.restarts,
         exit_code=metric.health.exit_code,
-        started_at=metric.health.started_at,
-        finished_at=metric.health.finished_at
+        started_at=metric.health.started_at.strftime('%Y-%m-%dT%H:%M:%S') if metric.health.started_at else None,
+        finished_at=metric.health.finished_at.strftime('%Y-%m-%dT%H:%M:%S') if metric.health.finished_at else None
     )
 
 class JobItem(BaseModel):
