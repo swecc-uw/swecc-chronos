@@ -1,4 +1,7 @@
-METRICS_MOCK_DATA = [
+from typing import List
+from app.models.container import DynamoHealthMetric
+
+METRICS_MOCK_DATA : List[DynamoHealthMetric] = [
     {
         "container_name": "seaport-fastapi-app-1",
         "timestamp": "2024-12-30T18:49:51",

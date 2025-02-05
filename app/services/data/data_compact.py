@@ -11,6 +11,13 @@ class DataCompactStrategy(ABC):
 
     def __str__(self):
         return self.__class__.__name__
+    
+    def check_data(self, data: List[DynamoHealthMetric]) -> List[DynamoHealthMetric]:
+        if not data:
+            return []
+        if isinstance(data, list) and isinstance(data[0], dict):
+            return [DynamoHealthMetric(**item) for item in data]
+        return data
 
 class DataCompactManager:
     def __init__(self, compacter_list: List[DataCompactStrategy]):
@@ -32,4 +39,7 @@ class DataCompactManager:
 
     def set_pipeline(self, compacter_list: List[DataCompactStrategy]):
         self.compacter_list = compacter_list
+
+    def get_current_pipeline(self) -> List[str]:
+        return [str(compacter) for compacter in self.compacter_list]
     
