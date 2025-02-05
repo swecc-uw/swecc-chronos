@@ -5,11 +5,14 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime
 from fastapi import FastAPI
-from app.services.docker_service import DockerService, callback_from_docker_events
+from app.services.docker_service import DockerService
+from app.utils.docker import callback_from_docker_events
 from app.models.container import convert_health_metric_to_dynamo
 from app.services.dynamodb_service import db
 from app.core.config import settings
 import logging
+
+from app.utils.task import update_to_db_task
 
 mapping = {
     "s": "second",
@@ -126,23 +129,6 @@ async def lifespan(app: FastAPI):
     yield
     task.cancel()
     scheduler.shutdown()
-
-def update_to_db_task():
-    stats = docker_service.poll_all_container_stats()
-    dynamodb_stats = [convert_health_metric_to_dynamo(stat) for stat in stats]
-
-    for stat in dynamodb_stats:
-        print(f"Adding item to table: {stat}")
-        try:
-            db.add_item_to_table("health_metrics", stat.model_dump())
-        except Exception as e:
-            print(f"Error adding item to table: {e}")
-
-def hidden_task():
-    print("This is a hidden task")
-
-def expose_tasks():
-    print("This is an exposed task")
 
 scheduler.add_job_every(update_to_db_task, "h", 10, settings.POLL_DATA_JOB_ID)
 

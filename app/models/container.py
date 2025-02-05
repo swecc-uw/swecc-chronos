@@ -166,6 +166,27 @@ class DockerEvent(BaseModel):
     name: str = Field(..., description="Target name")
     type: DockerEventType
 
+    def to_dynamo_item(self) -> dict:
+        """Convert to a format suitable for DynamoDB."""
+        return {
+            "event_type#container_name": f"{self.type.value}#{self.name}",  # Partition Key
+            "timestamp": int(self.time.timestamp()),  # Sort Key
+            "id": self.id,
+            "action": self.action.value,  # Convert Enum to string
+        }
+    
+    @classmethod
+    def from_dynamo_item(cls, item: dict) -> 'DockerEvent':
+        """Convert a DynamoDB item back to a DockerEvent."""
+        event_type, container_name = item["event_type#container_name"].split("#")
+        return cls(
+            id=item["id"],
+            action=DockerActionType(item["action"]),
+            time=datetime.fromtimestamp(item["timestamp"]),
+            name=container_name,
+            type=DockerEventType(event_type)
+        )
+
 def convert_raw_event_to_docker_event(raw_event: Dict) -> DockerEvent:
     """Convert raw event data to DockerEvent"""
     event_type = raw_event.get('Type', '')
@@ -181,24 +202,6 @@ def convert_raw_event_to_docker_event(raw_event: Dict) -> DockerEvent:
         time=event_time,
         name=target_name,
         type=DockerEventType(event_type)
-    )
-
-class DynamoDockerEvent(BaseModel):
-    """Compact & compatible DynamoDB docker event data"""
-    id: str = Field(..., description="Event ID")
-    action: str = Field(..., description="Event action")
-    time: int = Field(..., description="Event timestamp")
-    name: str = Field(..., description="Target name")
-    type: str = Field(..., description="Event type")
-
-def convert_docker_event_to_dynamo(event: DockerEvent) -> DynamoDockerEvent:
-    """Convert DockerEvent to DynamoDockerEvent"""
-    return DynamoDockerEvent(
-        id=event.id,
-        action=event.action,
-        time=event.time.timestamp(),
-        name=event.name,
-        type=event.type
     )
 
 class DynamoHealthMetric(BaseModel):
