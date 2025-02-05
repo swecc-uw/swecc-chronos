@@ -10,11 +10,14 @@ print("AWS_ACCESS_KEY_ID:", os.getenv('AWS_ACCESS_KEY_ID'))
 print("AWS_SECRET_ACCESS_KEY:", os.getenv('AWS_SECRET_ACCESS_KEY'))
 print("AWS_DEFAULT_REGION:", os.getenv('AWS_DEFAULT_REGION'))
 
+def on_startup():
+    print("Starting up")
+
 app = FastAPI(
     title="Docker Stats API",
     description="API for monitoring Docker container statistics",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(

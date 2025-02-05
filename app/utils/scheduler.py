@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
+import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime
 from fastapi import FastAPI
-from app.services.docker_service import DockerService
+from app.services.docker_service import DockerService, callback_from_docker_events
 from app.models.container import convert_health_metric_to_dynamo
 from app.services.dynamodb_service import db
 from app.core.config import settings
@@ -118,8 +119,12 @@ docker_service = DockerService()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("Starting Docker event listener...")  # Debug
     scheduler.start()
+    # run another process
+    task = asyncio.create_task(listen_to_docker_events())
     yield
+    task.cancel()
     scheduler.shutdown()
 
 def update_to_db_task():
@@ -139,4 +144,12 @@ def hidden_task():
 def expose_tasks():
     print("This is an exposed task")
 
-scheduler.add_job_every(update_to_db_task, "m", 10, settings.POLL_DATA_JOB_ID)
+scheduler.add_job_every(update_to_db_task, "h", 10, settings.POLL_DATA_JOB_ID)
+
+async def listen_to_docker_events():
+    """Background task to listen for Docker events asynchronously."""
+    def read_events():
+        for event in docker_service.get_socket_conenction():
+            callback_from_docker_events(event)
+
+    await asyncio.to_thread(read_events)

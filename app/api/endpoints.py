@@ -81,3 +81,11 @@ async def get_job_status(job_id: str):
 async def poll_container_stats(background_tasks: BackgroundTasks):
     background_tasks.add_task(docker_service.poll_all_container_stats)
     return {"message": "Polling started in the background"}
+
+# @router.get("/dockers/events", tags=["containers"])
+# async def get_realtime_events():
+#     events = docker_service.client.events(decode=True)
+#     for event in events:
+#         print(event)
+#     events.close()
+    # return {"message": "Realtime events not implemented yet"}

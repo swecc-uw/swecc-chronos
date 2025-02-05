@@ -40,3 +40,4 @@ watchfiles==1.0.3
 websockets==14.1
 APScheduler
 boto3
+asyncio

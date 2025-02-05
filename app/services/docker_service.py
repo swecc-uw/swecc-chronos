@@ -6,12 +6,17 @@ from app.models.container import (
     ContainerHealth,
     ContainerStats,
     CpuStats,
+    DockerEvent,
     MemoryStats,
     DiskStats,
     NetworkStats,
+    convert_docker_event_to_dynamo,
+    convert_raw_event_to_docker_event,
 )
 import logging
 from docker.errors import NotFound, APIError
+
+from app.utils.scheduler import update_to_db_task
 
 logger = logging.getLogger(__name__)
 
@@ -346,3 +351,24 @@ class DockerService:
                 continue
 
         return stats
+    
+    def get_socket_conenction(self):
+        return self.client.events(decode=True)
+
+def callback_from_docker_events(event):
+    """Callback function to handle Docker events."""
+    if event:
+        logger.info(f"Received Docker event: {event.get('Action')} {event.get('Type')}")
+
+    docker_events = convert_raw_event_to_docker_event(event)
+
+    if(docker_events.type == DockerEvent.Type.CONTAINER):
+        update_to_db_task()
+
+    dyname_db_docker_events = convert_docker_event_to_dynamo(docker_events)
+    logger.info(f"Adding item to table: {dyname_db_docker_events}")
+
+    try:
+        pass
+    except Exception as e:
+        logger.error(f"Error adding item to table: {e}")

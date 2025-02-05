@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, List, Union
 from datetime import datetime
+from enum import Enum
 
 class ContainerMetadata(BaseModel):
     """container identification and configuration data"""
@@ -107,6 +108,98 @@ class ContainerStats(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+class DockerActionType(str, Enum):
+    # general actions (more that one that have this type)
+    DESTROY = "destroy"
+    # container actions
+    ATTACH = "attach"
+    COMMIT = "commit"
+    COPY = "copy"
+    CREATE = "create"
+    DETACH = "detach"
+    DIE = "die"
+    EXEC_CREATE = "exec_create"
+    EXEC_DETACH = "exec_detach"
+    EXEC_DIE = "exec_die"
+    EXEC_START = "exec_start"
+    EXPORT = "export"
+    HEALTH_STATUS = "health_status"
+    KILL = "kill"
+    OOM = "oom"
+    PAUSE = "pause"
+    RENAME = "rename"
+    RESIZE = "resize"
+    RESTART = "restart"
+    START = "start"
+    STOP = "stop"
+    TOP = "top"
+    UNPAUSE = "unpause"
+    UPDATE = "update"
+
+    # network actions
+    CONNECT = "connect"
+    DISCONNECT = "disconnect"
+    REMOVE = "remove"
+
+    #image actions
+    DELETE = "delete"
+    IMPORT = "import"
+    LOAD = "load"
+    PULL = "pull"
+    PUSH = "push"
+    SAVE = "save"
+    TAG = "tag"
+    UNTAG = "untag"
+
+class DockerEventType(str, Enum):
+    CONTAINER = "container"
+    NETWORK = "network"
+    VOLUME = "volume"
+    IMAGE = "image"
+    PLUGIN = "plugin"
+
+class DockerEvent(BaseModel):
+    id: str = Field(..., description="Event ID")
+    action: DockerActionType
+    time: datetime = Field(..., description="Event timestamp")
+    name: str = Field(..., description="Target name")
+    type: DockerEventType
+
+def convert_raw_event_to_docker_event(raw_event: Dict) -> DockerEvent:
+    """Convert raw event data to DockerEvent"""
+    event_type = raw_event.get('Type', '')
+    event_action = raw_event.get('Action', '')
+    event_time = datetime.fromtimestamp(raw_event.get('time', 0))
+    event_id = raw_event.get('id', '')
+
+    target_name = raw_event.get('Actor', {}).get('Attributes', {}).get('name', '')
+    
+    return DockerEvent(
+        id=event_id,
+        action=event_action,
+        time=event_time,
+        name=target_name,
+        type=DockerEventType(event_type)
+    )
+
+class DynamoDockerEvent(BaseModel):
+    """Compact & compatible DynamoDB docker event data"""
+    id: str = Field(..., description="Event ID")
+    action: str = Field(..., description="Event action")
+    time: int = Field(..., description="Event timestamp")
+    name: str = Field(..., description="Target name")
+    type: str = Field(..., description="Event type")
+
+def convert_docker_event_to_dynamo(event: DockerEvent) -> DynamoDockerEvent:
+    """Convert DockerEvent to DynamoDockerEvent"""
+    return DynamoDockerEvent(
+        id=event.id,
+        action=event.action,
+        time=event.time.timestamp(),
+        name=event.name,
+        type=event.type
+    )
 
 class DynamoHealthMetric(BaseModel):
     # dynamodb type system is a pain
