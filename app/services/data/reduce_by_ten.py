@@ -70,6 +70,15 @@ class ReduceByTenForEachContainer(DataCompactStrategy):
 
                 # Create a new compacted entry
                 representative_entry = period_data[0]  # Use the first entry for non-aggregated fields
+
+                did_exit = all(e.status == "exited" for e in period_data)
+                if(did_exit):
+                    representative_entry.status = "exited"
+                    representative_entry.started_at = None
+                    representative_entry.finished_at = None
+                else:
+                    representative_entry.status = "running"
+
                 compacted_entry = DynamoHealthMetric(
                     timestamp=representative_entry.timestamp.strftime('%Y-%m-%dT%H:%M:%S'),
                     container_name=representative_entry.container_name,
