@@ -1,3 +1,4 @@
+from app.core.config import settings
 from app.models.container import convert_health_metric_to_dynamo
 from app.services.docker_service import DockerService
 from app.services.dynamodb_service import db
@@ -42,3 +43,9 @@ def hidden_task():
 
 def expose_tasks():
     print("This is an exposed task")
+
+
+MAPPING_TASKS_TO_ID = {
+    update_to_db_task: settings.POLL_DATA_JOB_ID,
+    compact_data_task: settings.COMPACT_DATA_JOB_ID,
+}

@@ -12,15 +12,16 @@ from app.services.dynamodb_service import db
 from app.core.config import settings
 import logging
 
-from app.utils.task import update_to_db_task
+from app.utils.task import update_to_db_task, MAPPING_TASKS_TO_ID, compact_data_task
 
 mapping = {
     "s": "second",
     "m": "minute",
-    "h": "hour"
+    "h": "hour",
+    "w": "week",
 }
 
-ALLOWED_JOBS = [settings.POLL_DATA_JOB_ID]
+ALLOWED_JOBS = [settings.POLL_DATA_JOB_ID, settings.COMPACT_DATA_JOB_ID]
 
 class Scheduler:
     """Scheduler class for running periodic or one-time tasks."""
@@ -65,6 +66,11 @@ class Scheduler:
     def add_job_every_hour(self, func, interval: int = 1, job_id=None):
         """Schedule a job to run every specified number of hours."""
         trigger = CronTrigger(hour=f"*/{interval}")
+        self.scheduler.add_job(func, trigger, id=job_id)
+
+    def add_job_every_week(self, func, interval: int = 1, job_id=None):
+        """Schedule a job to run every weeks."""
+        trigger = CronTrigger(week=f"*/{interval}")
         self.scheduler.add_job(func, trigger, id=job_id)
 
     def add_job_daily(self, func, hour: int = 0, minute: int = 0, second: int = 0, job_id=None):
@@ -130,7 +136,8 @@ async def lifespan(app: FastAPI):
     task.cancel()
     scheduler.shutdown()
 
-scheduler.add_job_every(update_to_db_task, "h", 10, settings.POLL_DATA_JOB_ID)
+scheduler.add_job_every(update_to_db_task, "h", 10, MAPPING_TASKS_TO_ID[update_to_db_task])
+scheduler.add_job_every(compact_data_task, "w", 2, MAPPING_TASKS_TO_ID[compact_data_task])
 
 async def listen_to_docker_events():
     """Background task to listen for Docker events asynchronously."""

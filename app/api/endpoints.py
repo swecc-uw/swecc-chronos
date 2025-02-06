@@ -82,6 +82,12 @@ async def poll_container_stats(background_tasks: BackgroundTasks):
     background_tasks.add_task(docker_service.poll_all_container_stats)
     return {"message": "Polling started in the background"}
 
+@router.get("/jobs", tags=["scheduler"])
+async def start_all_jobs():
+    scheduler = Scheduler()
+    ret = scheduler.list_jobs()
+    return {"jobs": ret}
+
 # @router.get("/dockers/events", tags=["containers"])
 # async def get_realtime_events():
 #     events = docker_service.client.events(decode=True)
