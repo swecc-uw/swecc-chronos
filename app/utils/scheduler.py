@@ -136,7 +136,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
     scheduler.shutdown()
 
-scheduler.add_job_every(update_to_db_task, "h", 10, MAPPING_TASKS_TO_ID[update_to_db_task])
+scheduler.add_job_every(update_to_db_task, "m", 10, MAPPING_TASKS_TO_ID[update_to_db_task])
 scheduler.add_job_every(compact_data_task, "w", 2, MAPPING_TASKS_TO_ID[compact_data_task])
 
 async def listen_to_docker_events():
