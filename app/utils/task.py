@@ -13,6 +13,14 @@ docker_service = DockerService()
 logger = logging.getLogger(__name__)
 compact_manager = DataCompactManager([PruneExitedAfterDays(), ReduceByTenForEachContainer()])
 
+def clean_up_docker_events_task():
+    logger.info("Running clean up docker events task")
+    two_weeks_ago = datetime.now() - timedelta(weeks=2)
+    old_items = db.get_items_older_than("docker_events", two_weeks_ago)
+    logger.info(f"Found {len(old_items)} items older than two weeks")
+    db.delete_bulk_items("docker_events", old_items)
+    logger.info(f"Deleted {len(old_items)} items")
+
 def compact_data_task():
     logger.info("Running compacting data task")
     two_weeks_ago = datetime.now() - timedelta(weeks=2)
@@ -48,4 +56,5 @@ def expose_tasks():
 MAPPING_TASKS_TO_ID = {
     update_to_db_task: settings.POLL_DATA_JOB_ID,
     compact_data_task: settings.COMPACT_DATA_JOB_ID,
+    clean_up_docker_events_task: settings.CLEAN_UP_EVENTS_JOB_ID,
 }

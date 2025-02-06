@@ -98,6 +98,23 @@ class DynamoDBService:
             print(f"Failed to get items from table '{table_name}': {e}")
             return []
         
+    def get_recent_dockers_events(self):
+        table = self.client.Table("docker_events")
+        two_week_ago = datetime.now() - timedelta(weeks=2)
+        timestamp_val = int(two_week_ago.timestamp())
+
+        try:
+            response = table.scan(
+            FilterExpression='#ts >= :two_week_ago',
+            ExpressionAttributeNames={'#ts': 'timestamp'},
+            ExpressionAttributeValues={':two_week_ago': timestamp_val}
+            )
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get recent items from table 'docker_events': {e}")
+            return []
+
     def get_recent_items_from_table(self, table_name):
         table = self.client.Table(table_name)
         one_week_ago = datetime.now() - timedelta(weeks=1)
@@ -129,9 +146,12 @@ class DynamoDBService:
             print(f"Failed to get items from table '{table_name}': {e}")
             return []
         
-    def get_items_older_than(self, table_name, time):
+    def get_items_older_than(self, table_name, time, timeformat="str"):
         table = self.client.Table(table_name)
-        time_str = time.strftime('%Y-%m-%dT%H:%M:%S')
+        if timeformat == "str":
+            time_str = time.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            time_str = time
         try:
             response = table.scan(
             FilterExpression='#ts < :time',

@@ -7,12 +7,10 @@ from datetime import datetime
 from fastapi import FastAPI
 from app.services.docker_service import DockerService
 from app.utils.docker import callback_from_docker_events
-from app.models.container import convert_health_metric_to_dynamo
-from app.services.dynamodb_service import db
 from app.core.config import settings
 import logging
 
-from app.utils.task import update_to_db_task, MAPPING_TASKS_TO_ID, compact_data_task
+from app.utils.task import update_to_db_task, MAPPING_TASKS_TO_ID, compact_data_task, clean_up_docker_events_task
 
 mapping = {
     "s": "second",
@@ -138,6 +136,7 @@ async def lifespan(app: FastAPI):
 
 scheduler.add_job_every(update_to_db_task, "m", 10, MAPPING_TASKS_TO_ID[update_to_db_task])
 scheduler.add_job_every(compact_data_task, "w", 2, MAPPING_TASKS_TO_ID[compact_data_task])
+scheduler.add_job_every(clean_up_docker_events_task, "w", 1, MAPPING_TASKS_TO_ID[clean_up_docker_events_task])
 
 async def listen_to_docker_events():
     """Background task to listen for Docker events asynchronously."""

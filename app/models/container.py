@@ -182,7 +182,7 @@ class DockerEvent(BaseModel):
         return cls(
             id=item["id"],
             action=DockerActionType(item["action"]),
-            time=datetime.fromtimestamp(item["timestamp"]),
+            time=datetime.fromtimestamp(float(item["timestamp"])),
             name=container_name,
             type=DockerEventType(event_type)
         )

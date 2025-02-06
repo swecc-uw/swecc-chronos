@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from app.services.docker_service import DockerService
 from app.services.dynamodb_service import db
-from app.models.container import ContainerStats, JobItem
+from app.models.container import ContainerStats, DockerEvent, JobItem
 from app.utils.scheduler import Scheduler
 from app.core.config import settings
-from typing import List
+from typing import List, Optional
 
 router = APIRouter()
 docker_service = DockerService()
@@ -88,10 +88,27 @@ async def start_all_jobs():
     ret = scheduler.list_jobs()
     return {"jobs": ret}
 
-# @router.get("/dockers/events", tags=["containers"])
-# async def get_realtime_events():
-#     events = docker_service.client.events(decode=True)
-#     for event in events:
-#         print(event)
-#     events.close()
-    # return {"message": "Realtime events not implemented yet"}
+@router.get("/dockers/events", tags=["docker"])
+async def get_docker_events(type: Optional[str] = Query(None, description="Filter by event type"),
+                            name: Optional[str] = Query(None, description="Filter by container name"),
+                            action: Optional[str] = Query(None, description="Filter by action")):
+    try:
+        filters = {}
+        if type:
+            filters["type"] = type
+        if name:
+            filters["name"] = name
+        if action:
+            filters["action"] = action
+        
+        items = db.get_recent_dockers_events()
+        
+        docker_events = [DockerEvent.from_dynamo_item(item) for item in items]
+        
+        if filters:
+            docker_events = [event for event in docker_events if all(getattr(event, key) == value for key, value in filters.items())]
+
+        return {"events": docker_events}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
