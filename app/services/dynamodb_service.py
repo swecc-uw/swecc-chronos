@@ -129,6 +129,21 @@ class DynamoDBService:
             print(f"Failed to get items from table '{table_name}': {e}")
             return []
         
+    def get_items_older_than(self, table_name, time):
+        table = self.client.Table(table_name)
+        time_str = time.strftime('%Y-%m-%dT%H:%M:%S')
+        try:
+            response = table.scan(
+            FilterExpression='#ts < :time',
+            ExpressionAttributeNames={'#ts': 'timestamp'},
+            ExpressionAttributeValues={':time': time_str}
+            )
+            items = response['Items']
+            return items
+        except ClientError as e:
+            print(f"Failed to get items from table '{table_name}': {e}")
+        
+        
     def get_recent_items_by_container_name(self, table_name, container_name):
         table = self.client.Table(table_name)
         one_week_ago = datetime.now() - timedelta(weeks=1)
@@ -159,5 +174,12 @@ class DynamoDBService:
         except ClientError as e:
             print(f"Failed to get items from table '{table_name}': {e}")
             return []
+        
+    def delete_bulk_items(self, table_name, items):
+        table = self.client.Table(table_name)
+        with table.batch_writer() as batch:
+            for item in items:
+                batch.delete_item(Key={'container_name': item['container_name'], 'timestamp': item['timestamp']})
+        print(f"Deleted {len(items)} items from table '{table_name}'")
 
 db = DynamoDBService()
