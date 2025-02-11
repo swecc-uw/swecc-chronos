@@ -36,6 +36,11 @@ jobs:
     needs: push_to_dockerhub
     
     steps:
+    - name: Fix permissions
+      run: |
+        sudo chown -R $USER:$USER /home/ubuntu/shared-actions-runner/_work
+        sudo chmod -R u+rw /home/ubuntu/shared-actions-runner/_work
+    
     - name: Checkout Repository
       uses: actions/checkout@v2
 
