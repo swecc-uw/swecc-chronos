@@ -1,6 +1,6 @@
-# Chronos - Lightweight Observability for Docker Hosts
+# Chronos - Observability for Docker Hosts
 
-Chronos is a lightweight service designed to collect and monitor metrics from Docker containers, providing real-time insights with flexible data management.
+A service for collecting and monitoring metrics from Docker containers.
 
 ## 🚀 Features
 
@@ -8,29 +8,79 @@ Chronos is a lightweight service designed to collect and monitor metrics from Do
 - **Customizable Cadence Policies:** Adjust data collection frequency to optimize performance and storage.
 - **Controllable Collection Tasks:** Control specific collections task to fit your needs.
 
-## 🌍 Environment Variables
-
-Ensure the following environment variables are set:
-
-```bash
-AWS_ACCESS_KEY_ID=<your-access-key>
-AWS_SECRET_ACCESS_KEY=<your-secret-key>
-AWS_DEFAULT_REGION=<your-region>
-```
 
 ## 🐳 Running Chronos
 
-1. **Create the `swecc_default` Docker network:**
-   ```bash
-   docker network create swecc_default
-   ```
+### Environment Variables
 
-2. **Start the service with Docker Compose:**
-   ```bash
-   docker compose up
-   ```
+To set up the necessary environment variables for DynamoDB, you need to provide the following keys:
 
-## 🔧 Customizing Docker Network
+```bash
+export AWS_ACCESS_KEY_ID=your_access_key_id
+export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+export AWS_DEFAULT_REGION=your_aws_region
+```
+
+See more at [Setting up DynamoDB (web service)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/SettingUp.DynamoWebService.html)
+
+### From source
+
+Step 1: Clone the repo
+
+```bash
+git clone "https://github.com/swecc-uw/swecc-chronos.git"
+```
+
+Step 2 (Optional): Create your Docker network. For other service to make request to this it must be within a network. Use `swecc_default` for SWECC related development. More [below](#-customizing-docker-network)
+
+```bash
+docker network create <your network name>
+```
+
+Step 3 (Optional): Add any service that communicate with this service to the network
+```bash
+docker network connect <your network name> <your container name>
+```
+
+*Note: If you use your custom network rather than `swecc_default`, make sure to update `docker-compose.yaml` before continue*
+
+Step 4: Set up python env. Active then add the previous DynamoDB key to your enviroment.
+
+```bash
+python -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+export AWS_ACCESS_KEY_ID=your_access_key_id
+export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+export AWS_DEFAULT_REGION=your_aws_region
+```
+
+*Note: Ensure that your Docker daemon is running before executing the following commands.*  
+
+## Quick start
+
+### Docker
+```bash
+docker compose up
+```
+
+### Locally
+```bash
+python uvicorn app.main:app --host 0.0.0.0 --port 8002
+```
+
+Check your server running at port 8002
+```bash
+curl "http://localhost:8002/health"
+```
+
+### Test
+
+```
+python -m app.test.<test>
+```
+
+### 🔧 Customizing Docker Network
 
 For deployments outside the SWECC club, you can modify the Docker Compose file to use a different network:
 
@@ -62,18 +112,8 @@ networks:
     name: your-custom-network
 ```
 
-**Note:** Keep `swecc_default` for SWECC club deployments.
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🧪 Running Tests
-
-Execute the test suite with:
-
-```bash
-python -m app.test.<test>
-```
-
----
-
-README revamp credit - GPT-4-turbo
-Contributions are welcome! Feel free to submit issues or pull requests to help improve Chronos.
-
+## Credit
+README revamp credit - GPT-4-turbo Contributions are welcome! Feel free to submit issues or pull requests to help improve Chronos.
