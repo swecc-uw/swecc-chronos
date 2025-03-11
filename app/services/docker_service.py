@@ -219,9 +219,9 @@ class DockerService:
                 if isinstance(stat, dict):
                     op = stat.get("op", "")
                     value = stat.get("value", 0)
-                    if op == "Read":
+                    if op == "read":
                         read_bytes += value
-                    elif op == "Write":
+                    elif op == "write":
                         write_bytes += value
 
             # process IO operations
@@ -229,9 +229,9 @@ class DockerService:
                 if isinstance(stat, dict):
                     op = stat.get("op", "")
                     value = stat.get("value", 0)
-                    if op == "Read":
+                    if op == "read":
                         reads += value
-                    elif op == "Write":
+                    elif op == "write":
                         writes += value
 
             return DiskStats(
