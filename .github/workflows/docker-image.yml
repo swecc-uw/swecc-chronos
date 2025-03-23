@@ -3,6 +3,8 @@ name: Deploy Chronos Service
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
+    # allow manual triggering and from API
 
 jobs:
   push_to_dockerhub:
