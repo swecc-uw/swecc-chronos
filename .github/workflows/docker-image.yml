@@ -48,15 +48,15 @@ jobs:
     - name: Deploy chronos service
       run: |
         # Remove the existing service if it exists
-        docker service rm swecc-stack-chronos || true
+        docker service rm chronos || true
         
         # Extract environment variables from config
         docker config inspect chronos_env --pretty | sed -n '/Data:/,$ p' | sed '1d' > env_file.txt
 
         # Deploy the service with the env file
         docker service create \
-          --name swecc-stack-chronos \
-          --network swecc-stack-swecc-network \
+          --name chronos \
+          --network prod_swecc-network \
           --env-file env_file.txt \
           --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
           --mount type=volume,source=chronos_data,target=/app \
