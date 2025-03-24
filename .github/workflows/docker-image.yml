@@ -63,8 +63,8 @@ jobs:
               --update-delay 30s \
               --update-order start-first \
               --update-failure-action continue \
-              --limit-cpu 0.5 \
-              --limit-memory 512M \
+              --limit-cpu 0.3 \
+              --limit-memory 256M \
               --reserve-cpu 0.1 \
               --reserve-memory 128M \
               --with-registry-auth \
@@ -80,15 +80,14 @@ jobs:
               --env-file env_file.txt \
               --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
               --mount type=volume,source=chronos_data,target=/app \
-              --publish 8002:8002 \
               --replicas 1 \
               --restart-condition any \
               --update-parallelism 1 \
               --update-delay 30s \
               --update-order start-first \
               --update-failure-action continue \
-              --limit-cpu 0.5 \
-              --limit-memory 512M \
+              --limit-cpu 0.3 \
+              --limit-memory 256M \
               --reserve-cpu 0.1 \
               --reserve-memory 128M \
               --with-registry-auth \
