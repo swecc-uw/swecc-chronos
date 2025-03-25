@@ -1,4 +1,4 @@
-name: Deploy Scheduler Service
+name: Deploy Chronos Service
 on:
   push:
     branches:
